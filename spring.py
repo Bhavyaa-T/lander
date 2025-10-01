@@ -11,12 +11,11 @@ M = 6.42e23
 R = 3.39e6
 
 # let r_p = 10 km above the surface
-# For an elliptical orbit, 0 < e < 1. We can choose e = 0.5
-# this lets us solve for v_p = sqrt(G * M * (1 + e) / r_p) 
+# For a hyperbolic orbit, e > 1. We can choose e = 2
 
 # initial position and velocity as vectors
 position = np.array([R + 1e4, 0, 0])
-velocity = np.array([0, 4350, 0])  
+velocity = np.array([0, 6000, 0])  
 
 # simulation time, timestep and time
 t_max = 10000

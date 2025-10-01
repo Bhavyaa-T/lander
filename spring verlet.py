@@ -3,8 +3,7 @@ import matplotlib.pyplot as plt
 
 
 # let r_p = 10 km above the surface
-# For an elliptical orbit, 0 < e < 1. We can choose e = 0.5
-# this lets us solve for v_p = sqrt(G * M * (1 + e) / r_p) 
+# For a hyperbolic orbit, e > 1. We can choose e = 2
 
 # mass, gravitational constant, mass of Mars, radius of Mars
 m = 1
@@ -23,7 +22,7 @@ velocity = np.zeros((len(t_array), 3))
 
 #initial position and velocity
 position[0] = [R + 1e4, 0, 0]
-velocity[0] = [0, 4350 ,0]
+velocity[0] = [0, 6000 ,0]
 
 #initial step
 position[1] = position[0] + dt * velocity[0]
