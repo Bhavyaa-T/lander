@@ -1,48 +1,53 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# mass, spring constant, initial position and velocity
+# mass, gravitational constant, mass of Mars, radius of Mars
 m = 1
-k = 1
+G = 6.67430e-11
+M = 6.42e23
+R = 3.39e6
 
 # simulation time, timestep and time
-t_max = 100
+t_max = 5000
 dt = 0.1
 t_array = np.arange(0, t_max, dt)
 
 
-x = np.zeros(len(t_array))
-v = np.zeros(len(t_array))
+position = np.zeros((len(t_array), 3))
+velocity = np.zeros((len(t_array), 3))
 
 #initial position and velocity
-x[0] = 0
-v[0] = 1
+position[0] = [R, 0, 0]
+velocity[0] = [0, np.sqrt(G * M / R) ,0]
 
 #initial step
-x[1] = x[0] + dt * v[0]
+position[1] = position[0] + dt * velocity[0]
 
 #Verlet integration
 for t in range(1, len(t_array) - 1):
 
-    a = - k * x[t] / m
-    x[t + 1] = 2 * x[t] - x[t-1] + dt * dt * a 
-    v[t + 1] = (1 / dt) * (x[t + 1] - x[t]) 
+    a = - G * M * position[t] / (np.linalg.norm(position[t]))**3
+    position[t + 1] = 2 * position[t] - position[t-1] + dt * dt * a 
+    velocity[t + 1] = (1 / dt) * (position[t + 1] - position[t]) 
 
-#Analytic solution
-y = []
-times = np.arange(0, t_max, 0.1)
-for t in times:
-    y.append(np.sin(t))
 
-# plot the position-time graph
+# plot the position-time graph (x component)
 plt.figure(1)
 plt.clf()
 plt.xlabel('time (s)')
+plt.ylabel('x (m)')
 plt.grid()
-plt.plot(t_array, x, label='x (m)')
-plt.plot(t_array, v, label='v (m/s)')
-plt.plot(times, y, label = 'sin(t)')
+plt.plot(t_array, position[:, 0], label='x (m)')
 plt.legend()
 plt.show()
 
-#from testing, the Verlet method becomes unstable at dt = 2
+# plot the x-y trajectory to show the orbit
+plt.figure(3)
+plt.clf()
+plt.xlabel('x (m)')
+plt.ylabel('y (m)')
+plt.axis('equal')
+plt.grid()
+plt.plot(position[:, 0], position[:, 1], label='Orbit trajectory')
+plt.legend()
+plt.show()
