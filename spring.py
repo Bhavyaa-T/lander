@@ -10,12 +10,16 @@ G = 6.67430e-11
 M = 6.42e23
 R = 3.39e6
 
+# let r_p = 10 km above the surface
+# For an elliptical orbit, 0 < e < 1. We can choose e = 0.5
+# this lets us solve for v_p = sqrt(G * M * (1 + e) / r_p) 
+
 # initial position and velocity as vectors
-position = np.array([R, 0, 0])
-velocity = np.array([0, np.sqrt(G * M / R), 0])  
+position = np.array([R + 1e4, 0, 0])
+velocity = np.array([0, 4350, 0])  
 
 # simulation time, timestep and time
-t_max = 5000
+t_max = 10000
 dt = 0.1
 t_array = np.arange(0, t_max, dt)
 
