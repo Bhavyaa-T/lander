@@ -7,7 +7,7 @@ using namespace std;
 int main() {
 
   // declare variables
-  double m, k, x, v, t_max, dt, t, a;
+  double m, k, x, v, t_max, dt, t, a, x_back;
   vector<double> t_list, x_list, v_list;
 
   // mass, spring constant, initial position and velocity
@@ -20,6 +20,10 @@ int main() {
   t_max = 100;
   dt = 0.1;
 
+  // first get x_old
+  a = -k * x / m; // defining a here to use for the first loop
+  x_back = x - dt * v;
+
   // Euler integration
   for (t = 0; t <= t_max; t = t + dt) {
 
@@ -28,11 +32,17 @@ int main() {
     x_list.push_back(x);
     v_list.push_back(v);
 
-    // calculate new position and velocity
-    a = -k * x / m;
-    x = x + dt * v;
-    v = v + dt * a;
+	// calculate new position and velocity
+	double x_forward = 2 * x - x_back + dt * dt * a; 
+	v = (x_forward - x_back) / (2 * dt);
 
+	// update variables for next iteration
+	x_back = x;
+	x = x_forward;
+
+	// calculate acceleration for new iteration
+	a = -k * x / m; 
+ 
   }
 
   // Write the trajectories to file

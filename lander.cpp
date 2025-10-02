@@ -13,25 +13,117 @@
 // ahg@eng.cam.ac.uk and gc121@eng.cam.ac.uk.
 
 #include "lander.h"
+#include <iostream>
+#include <fstream>
+#include <vector>
 
-void autopilot (void)
-  // Autopilot to adjust the engine throttle, parachute and attitude control
+void autopilot(void)
+// Autopilot to adjust the engine throttle, parachute and attitude control
 {
-  // INSERT YOUR CODE HERE
+    // Tunable parameters
+    const double K_h = 0.015;    // Altitude gain
+    const double K_p = 1;       // Proportional gain
+    const double delta = 0.05;
+
+    // Get altitude and vertical speed
+    double altitude = position.abs() - MARS_RADIUS;
+    vector3d e_r = position.norm(); // Radial unit vector
+    double vertical_speed = velocity * e_r; // Radial component of velocity
+
+    // Error signal (target is soft landing, so negative vertical speed)
+    double error = -(0.5 + K_h * altitude + vertical_speed);
+
+    // Proportional control
+    double P = K_p * error;
+
+    // Throttle control logic
+    if (P < -delta) {
+        throttle = 0.0;
+    }
+    else if (P > 1.0 - delta) {
+        throttle = 1.0;
+    }
+    else {
+        throttle = delta + P;
+    }
+
+    // Clamp throttle to [0, 1]
+    if (throttle < 0.0) throttle = 0.0;
+    if (throttle > 1.0) throttle = 1.0;
+
+
+    static std::vector<double> h_list, v_list, t_list;
+    static double t = 0.0;
+
+    t_list.push_back(t);
+    h_list.push_back(altitude);
+    v_list.push_back(vertical_speed);
+
+    t += delta_t;
+
+    // At the end of the simulation, write to file (call this once, not every step)
+    std::ofstream fout("trajectories.txt");
+    if (fout) {
+        for (size_t i = 0; i < t_list.size(); ++i) {
+            fout << t_list[i] << ' ' << h_list[i] << ' ' << v_list[i] << std::endl;
+        }
+    }
+}
+void numerical_dynamics(void)
+{
+    static bool first_step = true;
+
+    // --- compute forces at current state ---
+    vector3d thr = thrust_wrt_world();
+    double d = atmospheric_density(position);
+
+    vector3d F_d;
+    if (parachute_status == DEPLOYED) {
+        F_d = -0.5 * d * velocity.abs() * velocity * (1 * 3.14159 * LANDER_SIZE * LANDER_SIZE + 2 * 5 * 2 * 2 * LANDER_SIZE * LANDER_SIZE);
+    }
+    else {
+        F_d = -0.5 * d * velocity.abs() * velocity * (3.14159 * LANDER_SIZE * LANDER_SIZE);
+    }
+
+    double LANDER_MASS = UNLOADED_LANDER_MASS + fuel * FUEL_DENSITY * FUEL_CAPACITY;
+    double r = position.abs();
+
+    // acceleration at time n
+    vector3d a = -((GRAVITY * MARS_MASS) / (r * r * r)) * position
+        + F_d / LANDER_MASS + thr / LANDER_MASS;
+
+    // Verlet integrator 
+
+    // 1. position update
+    vector3d new_position = position + velocity * delta_t + 0.5 * a * delta_t * delta_t;
+
+    // 2. compute forces at new position (need new accel for v update)
+    thr = thrust_wrt_world();
+    d = atmospheric_density(new_position);
+
+    if (parachute_status == DEPLOYED) {
+        F_d = -0.5 * d * velocity.abs() * velocity * (1 * 3.14159 * LANDER_SIZE * LANDER_SIZE + 2 * 5 * 2 * 2 * LANDER_SIZE * LANDER_SIZE);
+    }
+    else {
+        F_d = -0.5 * d * velocity.abs() * velocity * (3.14159 * LANDER_SIZE * LANDER_SIZE);
+    }
+
+    r = new_position.abs();
+    vector3d a_new = -((GRAVITY * MARS_MASS) / (r * r * r)) * new_position
+        + F_d / LANDER_MASS + thr / LANDER_MASS;
+
+    // 3. velocity update with average acceleration
+    vector3d new_velocity = velocity + 0.5 * (a + a_new) * delta_t;
+
+    // --- commit updates ---
+    position = new_position;
+    velocity = new_velocity;
+
+    // autopilot and stabilization
+    if (autopilot_enabled) autopilot();
+    if (stabilized_attitude) attitude_stabilization();
 }
 
-void numerical_dynamics (void)
-  // This is the function that performs the numerical integration to update the
-  // lander's pose. The time step is delta_t (global variable).
-{
-  // INSERT YOUR CODE HERE
-
-  // Here we can apply an autopilot to adjust the thrust, parachute and attitude
-  if (autopilot_enabled) autopilot();
-
-  // Here we can apply 3-axis stabilization to ensure the base is always pointing downwards
-  if (stabilized_attitude) attitude_stabilization();
-}
 
 void initialize_simulation (void)
   // Lander pose initialization - selects one of 10 possible scenarios
