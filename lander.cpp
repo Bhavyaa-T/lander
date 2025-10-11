@@ -73,7 +73,7 @@ void numerical_dynamics(void)
 {
     static bool first_step = true;
 
-    // --- compute forces at current state ---
+
     vector3d thr = thrust_wrt_world();
     double d = atmospheric_density(position);
 
@@ -94,10 +94,10 @@ void numerical_dynamics(void)
 
     // Verlet integrator 
 
-    // 1. position update
+    
     vector3d new_position = position + velocity * delta_t + 0.5 * a * delta_t * delta_t;
 
-    // 2. compute forces at new position (need new accel for v update)
+    
     thr = thrust_wrt_world();
     d = atmospheric_density(new_position);
 
@@ -112,14 +112,14 @@ void numerical_dynamics(void)
     vector3d a_new = -((GRAVITY * MARS_MASS) / (r * r * r)) * new_position
         + F_d / LANDER_MASS + thr / LANDER_MASS;
 
-    // 3. velocity update with average acceleration
+
     vector3d new_velocity = velocity + 0.5 * (a + a_new) * delta_t;
 
-    // --- commit updates ---
+    // commit updates
     position = new_position;
     velocity = new_velocity;
 
-    // autopilot and stabilization
+    
     if (autopilot_enabled) autopilot();
     if (stabilized_attitude) attitude_stabilization();
 }
