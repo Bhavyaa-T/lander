@@ -47,12 +47,12 @@ void autopilot(void)
         throttle = delta + P;
     }
 
-    // Clamp throttle to [0, 1]
+
     if (throttle < 0.0) throttle = 0.0;
     if (throttle > 1.0) throttle = 1.0;
 
 
-    static std::vector<double> h_list, v_list, t_list;
+    static vector<double> h_list, v_list, t_list;
     static double t = 0.0;
 
     t_list.push_back(t);
@@ -61,8 +61,8 @@ void autopilot(void)
 
     t += delta_t;
 
-    // At the end of the simulation, write to file (call this once, not every step)
-    std::ofstream fout("trajectories.txt");
+
+    ofstream fout("trajectories.txt");
     if (fout) {
         for (size_t i = 0; i < t_list.size(); ++i) {
             fout << t_list[i] << ' ' << h_list[i] << ' ' << v_list[i] << std::endl;
