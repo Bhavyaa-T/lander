@@ -21,8 +21,8 @@ void autopilot(void)
 // Autopilot to adjust the engine throttle, parachute and attitude control
 {
     // Tunable parameters
-    const double K_h = 0.015;    // Altitude gain
-    const double K_p = 1;       // Proportional gain
+    const double K_h = 0.015;    
+    const double K_p = 1;       
     const double delta = 0.05;
 
     // Get altitude and vertical speed
