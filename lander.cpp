@@ -52,22 +52,14 @@ void autopilot(void)
     if (throttle > 1.0) throttle = 1.0;
 
 
-    static vector<double> h_list, v_list, t_list;
     static double t = 0.0;
+    static std::ofstream fout("trajectories.txt", std::ios::app);
 
-    t_list.push_back(t);
-    h_list.push_back(altitude);
-    v_list.push_back(vertical_speed);
+    if (fout) {
+        fout << t << ' ' << altitude << ' ' << vertical_speed << '\n';
+    }
 
     t += delta_t;
-
-
-    ofstream fout("trajectories.txt");
-    if (fout) {
-        for (size_t i = 0; i < t_list.size(); ++i) {
-            fout << t_list[i] << ' ' << h_list[i] << ' ' << v_list[i] << std::endl;
-        }
-    }
 }
 void numerical_dynamics(void)
 {
