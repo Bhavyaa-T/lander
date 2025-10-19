@@ -71,13 +71,14 @@ void autopilot(void)
 }
 void numerical_dynamics(void)
 {
-    static bool first_step = true;
-
+    static vector3d previous_position;
+    vector3d new_position;
 
     vector3d thr = thrust_wrt_world();
     double d = atmospheric_density(position);
 
     vector3d F_d;
+
     if (parachute_status == DEPLOYED) {
         F_d = -0.5 * d * velocity.abs() * velocity * (1 * 3.14159 * LANDER_SIZE * LANDER_SIZE + 2 * 5 * 2 * 2 * LANDER_SIZE * LANDER_SIZE);
     }
@@ -88,36 +89,25 @@ void numerical_dynamics(void)
     double LANDER_MASS = UNLOADED_LANDER_MASS + fuel * FUEL_DENSITY * FUEL_CAPACITY;
     double r = position.abs();
 
+
     // acceleration at time n
     vector3d a = -((GRAVITY * MARS_MASS) / (r * r * r)) * position
         + F_d / LANDER_MASS + thr / LANDER_MASS;
 
-    // Verlet integrator 
 
-    
-    vector3d new_position = position + velocity * delta_t + 0.5 * a * delta_t * delta_t;
-
-    
-    thr = thrust_wrt_world();
-    d = atmospheric_density(new_position);
-
-    if (parachute_status == DEPLOYED) {
-        F_d = -0.5 * d * velocity.abs() * velocity * (1 * 3.14159 * LANDER_SIZE * LANDER_SIZE + 2 * 5 * 2 * 2 * LANDER_SIZE * LANDER_SIZE);
+    if (simulation_time == 0) {
+        new_position = position + velocity * delta_t + 0.5 * a * delta_t * delta_t;
+		velocity = 0.5 * (new_position - position) / delta_t;
     }
     else {
-        F_d = -0.5 * d * velocity.abs() * velocity * (3.14159 * LANDER_SIZE * LANDER_SIZE);
+		new_position = 2 * position - previous_position + a * delta_t * delta_t;
+		velocity = (new_position - position) / delta_t;
     }
 
-    r = new_position.abs();
-    vector3d a_new = -((GRAVITY * MARS_MASS) / (r * r * r)) * new_position
-        + F_d / LANDER_MASS + thr / LANDER_MASS;
-
-
-    vector3d new_velocity = velocity + 0.5 * (a + a_new) * delta_t;
 
     // commit updates
+	previous_position = position;
     position = new_position;
-    velocity = new_velocity;
 
     
     if (autopilot_enabled) autopilot();
