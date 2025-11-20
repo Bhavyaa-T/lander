@@ -87,7 +87,7 @@ void numerical_dynamics(void)
     static vector3d previous_position;
     vector3d new_position;
 
-    vector3d thr = thrust_wrt_world();
+    vector3d thr = thrust_wrt_world() + 100 * cos(0.1 * simulation_time) * position.norm();
     double d = atmospheric_density(position);
 
     vector3d F_d;
