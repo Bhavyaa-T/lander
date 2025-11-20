@@ -20,15 +20,11 @@
 void autopilot(void)
 // Autopilot to adjust the engine throttle, parachute and attitude control
 {
+    /*
     // Tunable parameters
     const double K_h = 0.015;    
     const double K_p = 1;       
     const double delta = 0.05;
-
-    // Get altitude and vertical speed
-    double altitude = position.abs() - MARS_RADIUS;
-    vector3d e_r = position.norm(); // Radial unit vector
-    double vertical_speed = velocity * e_r; // Radial component of velocity
 
     // Error signal (target is soft landing, so negative vertical speed)
     double error = -(0.5 + K_h * altitude + vertical_speed);
@@ -60,6 +56,31 @@ void autopilot(void)
     }
 
     t += delta_t;
+    */
+
+    // Get altitude and vertical speed
+    double altitude = position.abs() - MARS_RADIUS;
+    vector3d e_r = position.norm(); // Radial unit vector
+    double vertical_speed = velocity * e_r; // Radial component of velocity
+
+    double LANDER_MASS = UNLOADED_LANDER_MASS + fuel * FUEL_DENSITY * FUEL_CAPACITY; // constant 200kg for fuel_rate set to 0
+    double r = position.abs();
+    const double k_p = 0.091;
+    const double k_d = 0.178;
+    double target_altitude = 700;
+
+    throttle = 747.1 / MAX_THRUST + k_p * (target_altitude - altitude) + k_d * -1 * vertical_speed;
+
+
+    static std::ofstream fout("trajectories.txt", std::ios::app);
+
+    if (fout) {
+        fout << simulation_time << ' ' << altitude << ' ' << vertical_speed << '\n';
+    }
+
+     // throttle = ((GRAVITY * MARS_MASS * (LANDER_MASS / (r * r))) / MAX_THRUST);
+
+
 }
 void numerical_dynamics(void)
 {
@@ -89,7 +110,7 @@ void numerical_dynamics(void)
 
     if (simulation_time == 0) {
         new_position = position + velocity * delta_t + 0.5 * a * delta_t * delta_t;
-		velocity = 0.5 * (new_position - position) / delta_t;
+		velocity = (new_position - position) / delta_t;
     }
     else {
 		new_position = 2 * position - previous_position + a * delta_t * delta_t;
@@ -124,9 +145,9 @@ void initialize_simulation (void)
   scenario_description[3] = "polar launch at escape velocity (but drag prevents escape)";
   scenario_description[4] = "elliptical orbit that clips the atmosphere and decays";
   scenario_description[5] = "descent from 200km";
-  scenario_description[6] = "";
-  scenario_description[7] = "";
-  scenario_description[8] = "";
+  scenario_description[6] = "descent from 500m";
+  scenario_description[7] = "descent from 510m";
+  scenario_description[8] = "descent from 700m";
   scenario_description[9] = "";
 
   switch (scenario) {
@@ -198,12 +219,36 @@ void initialize_simulation (void)
     break;
 
   case 6:
+    // a descent from rest at 500m altitude
+    position = vector3d(0.0, -(MARS_RADIUS + 500), 0.0);
+    velocity = vector3d(0.0, 0.0, 0.0);
+    orientation = vector3d(0.0, 0.0, 90.0);
+    delta_t = 0.01;
+    parachute_status = NOT_DEPLOYED;
+    stabilized_attitude = true;
+    autopilot_enabled = true;
     break;
 
   case 7:
+    // a descent from rest at 510m altitude
+    position = vector3d(0.0, -(MARS_RADIUS + 510), 0.0);
+    velocity = vector3d(0.0, 0.0, 0.0);
+    orientation = vector3d(0.0, 0.0, 90.0);
+    delta_t = 0.01;
+    parachute_status = NOT_DEPLOYED;
+    stabilized_attitude = true;
+    autopilot_enabled = true;
     break;
 
   case 8:
+    // a descent from rest at 700m altitude
+    position = vector3d(0.0, -(MARS_RADIUS + 700), 0.0);
+    velocity = vector3d(0.0, 0.0, 0.0);
+    orientation = vector3d(0.0, 0.0, 90.0);
+    delta_t = 0.01;
+    parachute_status = NOT_DEPLOYED;
+    stabilized_attitude = true;
+    autopilot_enabled = true;
     break;
 
   case 9:
